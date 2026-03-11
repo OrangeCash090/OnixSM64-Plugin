@@ -1,7 +1,6 @@
 using OnixRuntime.Api.Maths;
-using OnixRuntime.Api.World;
 
-namespace OnixSM64.Runtime;
+namespace OnixSM64.Misc;
 
 public struct WorldSnapshot {
 	public BoundingBox[] NearbyCollisions;

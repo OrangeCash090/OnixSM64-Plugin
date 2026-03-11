@@ -1,6 +1,7 @@
 using System.Numerics;
 using OnixRuntime.Api;
 using OnixRuntime.Api.Maths;
+using OnixSM64.Misc;
 
 namespace OnixSM64.Runtime;
 

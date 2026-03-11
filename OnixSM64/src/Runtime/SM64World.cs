@@ -6,6 +6,7 @@ using OnixRuntime.Api.Inputs;
 using OnixRuntime.Api.Maths;
 using OnixRuntime.Api.Rendering;
 using OnixRuntime.Api.UI;
+using OnixSM64.Misc;
 
 namespace OnixSM64.Runtime;
 

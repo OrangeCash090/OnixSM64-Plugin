@@ -1,5 +1,6 @@
 using System.Numerics;
 using libsm64sharp;
+using OnixSM64.Misc;
 
 namespace OnixSM64.Runtime;
 

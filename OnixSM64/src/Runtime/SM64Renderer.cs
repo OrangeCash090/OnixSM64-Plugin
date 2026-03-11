@@ -3,6 +3,7 @@ using libsm64sharp;
 using OnixRuntime.Api.Maths;
 using OnixRuntime.Api.Rendering;
 using OnixRuntime.Api.Utils;
+using OnixSM64.Misc;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
