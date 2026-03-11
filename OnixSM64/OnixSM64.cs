@@ -1,3 +1,5 @@
+using OnixRuntime.Api;
+using OnixRuntime.Api.Entities;
 using OnixRuntime.Plugin;
 using OnixSM64.Runtime;
 
@@ -23,6 +25,8 @@ namespace OnixSM64 {
 		}
 
 		protected override void OnEnabled() {
+			if (Onix.LocalPlayer!.PermissionLevel != PlayerPermissionLevel.Operator) throw new Exception("You must be Operator to use this plugin!");
+			
 			if (World != null) {
 				World.EnabledFromPlugin = true;
 				World.Enable();

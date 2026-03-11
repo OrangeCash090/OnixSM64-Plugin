@@ -1,8 +1,8 @@
 {
-  "uuid": "3bc244f4-7246-42ec-b493-e4167fac6abf",
+  "uuid": "b2942f0f-62dc-40dd-8273-76bf8d26493c",
   "plugin_name": "OnixSM64",
   "plugin_author": "OrangeCash090",
-  "plugin_description": "Become Mario. (Only works in worlds with Operator)\n\nYou need to provide your own copy of the Super Mario 64 rom to use this. Simply go into the plugin settings, click the Open Rom button, and reload the plugin.",
+  "plugin_description": "Become Mario. (Only works in worlds with Operator)",
   "plugin_version": "1.0.0",
   "game_version": "1.26.3",
   "supported_game_version_ranges": [

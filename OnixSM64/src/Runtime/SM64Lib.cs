@@ -29,7 +29,8 @@ public static class SM64Lib {
 		if (_nativeLoaded) return;
 		_nativeLoaded = true;
 
-		string dllPath = Path.Combine(assetsPath, "sm64.dll");
+		string runtimePath = assetsPath.Replace("assets\\", "") + "runtimes\\win-x64\\native\\";
+		string dllPath = Path.Combine(runtimePath, "sm64.dll");
 
 		if (!File.Exists(dllPath))
 			throw new FileNotFoundException("sm64.dll not found", dllPath);
@@ -50,6 +51,7 @@ public static class SM64Lib {
 		sm64_set_mario_state = null!;
 
 		FreeLibrary(_moduleHandle);
+
 		_moduleHandle = IntPtr.Zero;
 		_nativeLoaded = false;
 	}

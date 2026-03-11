@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Numerics;
 using libsm64sharp;
 using OnixRuntime.Api;
+using OnixRuntime.Api.Entities;
 using OnixRuntime.Api.Inputs;
 using OnixRuntime.Api.Maths;
 using OnixRuntime.Api.Rendering;
@@ -91,6 +92,13 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 
 	public void OnSessionJoined() {
 		if (!Loaded || !EnabledFromPlugin) return;
+
+		if (Onix.LocalPlayer!.PermissionLevel != PlayerPermissionLevel.Operator) {
+			EnabledFromPlugin = false;
+			Disable();
+			throw new Exception("You must be Operator to use this plugin!");
+		}
+		
 		Enabled = true;
 
 		lock (_simLock) {
@@ -359,9 +367,13 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 		Onix.Events.Session.SessionLeft -= Disable;
 
 		_fixedUpdateThread?.Join(2000);
-
+		
 		Mario?.Dispose();
+		Mario = null;
+
 		Context?.Dispose();
+		Context = null;
+
 		Commands?.Dispose();
 		
 		SM64Lib.UnloadSm64Native();
