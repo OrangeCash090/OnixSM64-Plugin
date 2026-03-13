@@ -1,4 +1,4 @@
-namespace OnixSM64.Misc;
+namespace OnixSM64.Runtime;
 
 public static class Constants {
 	public const int SCALE_FACTOR = 80;

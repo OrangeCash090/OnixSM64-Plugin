@@ -29,7 +29,7 @@ public sealed class SM64CollisionWorld {
 	) {
 		SM64CollisionUtils.AddCubeSafe(_currentBuilder, center, size, surfaceType, terrainType);
 	}
-	
+
 	public void AddWedge(
 		Vector3 center,
 		Vector3 size,
@@ -67,13 +67,5 @@ public sealed class SM64CollisionWorld {
 		} catch (Exception ex) {
 			Console.WriteLine($"Failed to commit collision: {ex.Message}");
 		}
-	}
-
-	public static Vector3 ToVector3(Vec3 v) {
-		return new Vector3(v.X, v.Y, v.Z);
-	}
-
-	public static Vec3 ToVec3(Vector3 v) {
-		return new Vec3(v.X, v.Y, v.Z);
 	}
 }

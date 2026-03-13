@@ -1,6 +1,5 @@
 using System.Numerics;
 using libsm64sharp;
-using OnixSM64.Misc;
 
 namespace OnixSM64.Runtime;
 
@@ -106,7 +105,7 @@ public static class SM64CollisionUtils {
 		Vector3 bfr = new(+half.X, -half.Y, +half.Z); // bottom-front-right
 		Vector3 btl = new(-half.X, +half.Y, -half.Z); // back-top-left
 		Vector3 btr = new(+half.X, +half.Y, -half.Z); // back-top-right
-		
+
 		rotation = ((rotation % 4) + 4) % 4;
 
 		if (rotation != 0) {
@@ -120,19 +119,22 @@ public static class SM64CollisionUtils {
 			btl = RotateY(btl, sin, cos);
 			btr = RotateY(btr, sin, cos);
 		}
-		
-		bbl += center; bbr += center;
-		bfl += center; bfr += center;
-		btl += center; btr += center;
-		
+
+		bbl += center;
+		bbr += center;
+		bfl += center;
+		bfr += center;
+		btl += center;
+		btr += center;
+
 		AddQuadSafe(builder, bfl, bbl, bbr, bfr, surfaceType, terrainType);
-		
+
 		AddQuadSafe(builder, bbl, bbr, btr, btl, surfaceType, terrainType);
-		
+
 		AddQuadSafe(builder, btl, bfl, bfr, btr, surfaceType, terrainType);
-		
+
 		AddTriangleSafe(builder, bfl, bbl, btl, surfaceType, terrainType);
-		
+
 		AddTriangleSafe(builder, bbr, bfr, btr, surfaceType, terrainType);
 	}
 

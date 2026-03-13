@@ -7,19 +7,12 @@ using OnixRuntime.Api.Inputs;
 using OnixRuntime.Api.Maths;
 using OnixRuntime.Api.Rendering;
 using OnixRuntime.Api.UI;
-using OnixSM64.Misc;
+using OnixSM64.Classes;
 
 namespace OnixSM64.Runtime;
 
-public struct MarioRenderSnapshot {
-	public ISm64MarioMesh? Mesh;
-	public Vector3 WorldOffset;
-	public Vec3 MarioWorldPos;
-	public bool Valid;
-}
-
 public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
-	public OnixSM64Config Config = pluginConfig;
+	public readonly OnixSM64Config Config = pluginConfig;
 
 	public bool Loaded;
 	public bool Enabled;
@@ -31,20 +24,20 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 	public SM64Renderer? Renderer;
 	public SM64Input? Input;
 	public SM64Commands? Commands;
-	
+
 	private readonly object _simLock = new();
 	private Thread? _fixedUpdateThread;
-	
+
 	private MarioRenderSnapshot _renderSnapshot;
 	private InputEvents _pendingInputEvents;
-	
+
 	private bool _inHud;
 	private SM64CollisionWorld? _collisionWorld;
 	private Vector3 _worldOffset = Vector3.Zero;
 
 	private bool _pendingReset;
 	private Vector3 _pendingResetWorldOffset;
-	
+
 	private WorldSnapshot _latestWorldSnapshot;
 
 	public void Initialize(string romPath, string assetsPath) {
@@ -73,7 +66,7 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 			Name = "SM64 Simulation",
 			IsBackground = true
 		};
-		
+
 		_fixedUpdateThread.Start();
 
 		Loaded = true;
@@ -96,7 +89,7 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 
 		lock (_simLock) {
 			Vec3 playerPos = Onix.LocalPlayer!.Position;
-			
+
 			_pendingResetWorldOffset = new Vector3(playerPos.X, playerPos.Y, playerPos.Z);
 			_pendingReset = true;
 
@@ -109,15 +102,15 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 	private void SimulationLoop() {
 		double accumulator = 0.0;
 		long prevTicks = Stopwatch.GetTimestamp();
-		
+
 		while (!Disposed) {
 			if (!Enabled) continue;
-			
+
 			long nowTicks = Stopwatch.GetTimestamp();
 			double elapsed = (double)(nowTicks - prevTicks) / Stopwatch.Frequency;
-			
+
 			prevTicks = nowTicks;
-			
+
 			if (elapsed > 0.1) elapsed = 0.1;
 
 			accumulator += elapsed;
@@ -127,7 +120,7 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 				FixedUpdate();
 				accumulator -= Constants.FIXED_TIME_STEP;
 			}
-			
+
 			double timeUntilNext = Constants.FIXED_TIME_STEP - accumulator;
 
 			if (timeUntilNext > 0.001) {
@@ -145,10 +138,8 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 				_pendingReset = false;
 			}
 
-			if (_latestWorldSnapshot.IsValid) {
-				UpdateCollision(_latestWorldSnapshot);
-				UpdateWorldElements(_latestWorldSnapshot);
-			}
+			UpdateCollision(_latestWorldSnapshot);
+			UpdateWorldElements(_latestWorldSnapshot);
 
 			InputEvents events = default;
 
@@ -158,7 +149,7 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 
 				if (events.PunchFired) {
 					(Vec3 lookFrom, Vec3 lookTo, Vec3 ep1, Vec3 ep2) = Input.BuildPunchVectors(Mario!, _worldOffset);
-					
+
 					events.PunchLookFrom = lookFrom;
 					events.PunchLookTo = lookTo;
 					events.PunchEntityPos1 = ep1;
@@ -167,22 +158,22 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 
 				if (events.GroundPoundFired) {
 					Vec3 marioPos = SM64Utils.ConvertFromSM64(Mario!.Position);
-					events.GroundPoundWorldPos = marioPos + SM64CollisionWorld.ToVec3(_worldOffset);
+					events.GroundPoundWorldPos = marioPos + SM64Utils.ToVec3(_worldOffset);
 				}
 			}
-			
+
 			// this is so stupid
-			if (events.PunchFired)        _pendingInputEvents.PunchFired = true;
-			if (events.GroundPoundFired)  _pendingInputEvents.GroundPoundFired = true;
+			if (events.PunchFired) _pendingInputEvents.PunchFired = true;
+			if (events.GroundPoundFired) _pendingInputEvents.GroundPoundFired = true;
 			if (events.CameraCommand != null) _pendingInputEvents.CameraCommand = events.CameraCommand;
-			
+
 			if (events.PunchFired) {
-				_pendingInputEvents.PunchLookFrom   = events.PunchLookFrom;
-				_pendingInputEvents.PunchLookTo     = events.PunchLookTo;
+				_pendingInputEvents.PunchLookFrom = events.PunchLookFrom;
+				_pendingInputEvents.PunchLookTo = events.PunchLookTo;
 				_pendingInputEvents.PunchEntityPos1 = events.PunchEntityPos1;
 				_pendingInputEvents.PunchEntityPos2 = events.PunchEntityPos2;
 			}
-			
+
 			if (events.GroundPoundFired) {
 				_pendingInputEvents.GroundPoundWorldPos = events.GroundPoundWorldPos;
 			}
@@ -190,12 +181,11 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 			Mario?.Tick();
 
 			Vec3 marioLocalPos = SM64Utils.ConvertFromSM64(Mario!.Position);
-			
+
 			_renderSnapshot = new MarioRenderSnapshot {
 				Mesh = Mario.Mesh,
 				WorldOffset = _worldOffset,
-				MarioWorldPos = marioLocalPos + SM64CollisionWorld.ToVec3(_worldOffset),
-				Valid = Mario.Mesh.TriangleData != null
+				MarioWorldPos = marioLocalPos + SM64Utils.ToVec3(_worldOffset),
 			};
 		}
 	}
@@ -216,7 +206,7 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 		List<Vec3> stairPositions = [];
 
 		foreach (StairBlock block in snapshot.StairBlocks) {
-			Vector3 worldCenter = SM64CollisionWorld.ToVector3(block.Position.Center);
+			Vector3 worldCenter = SM64Utils.ToVector3(block.Position.Center);
 			Vector3 localCenter = worldCenter - _worldOffset;
 
 			stairPositions.Add(block.Position.Center.Floor());
@@ -225,10 +215,10 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 
 		foreach (BoundingBox box in snapshot.NearbyCollisions) {
 			if (stairPositions.Contains(box.Center.Floor())) continue;
-			
-			Vector3 worldCenter = SM64CollisionWorld.ToVector3(box.Center);
+
+			Vector3 worldCenter = SM64Utils.ToVector3(box.Center);
 			Vector3 localCenter = worldCenter - _worldOffset;
-			Vector3 size = SM64CollisionWorld.ToVector3(box.Size);
+			Vector3 size = SM64Utils.ToVector3(box.Size);
 
 			_collisionWorld.AddCube(localCenter, size);
 		}
@@ -257,30 +247,56 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 			}
 
 			if (Input!.IsControlling && _inHud) {
-				if (key == InputKey.Type.W) { Input.State.Forward  = isDown; return isDown; }
-				if (key == InputKey.Type.A) { Input.State.Left     = isDown; return isDown; }
-				if (key == InputKey.Type.S) { Input.State.Backward = isDown; return isDown; }
-				if (key == InputKey.Type.D) { Input.State.Right    = isDown; return isDown; }
+				if (key == InputKey.Type.W) {
+					Input.State.Forward = isDown;
+					return isDown;
+				}
 
-				if (key == Config.MarioJumpKey)  { Input.State.AButton = isDown; return isDown; }
-				if (key == Config.MarioPunchKey)  { Input.State.BButton = isDown; return isDown; }
-				if (key == Config.MarioCrouchKey) { Input.State.ZButton = isDown; return isDown; }
+				if (key == InputKey.Type.A) {
+					Input.State.Left = isDown;
+					return isDown;
+				}
+
+				if (key == InputKey.Type.S) {
+					Input.State.Backward = isDown;
+					return isDown;
+				}
+
+				if (key == InputKey.Type.D) {
+					Input.State.Right = isDown;
+					return isDown;
+				}
+
+				if (key == Config.MarioJumpKey) {
+					Input.State.AButton = isDown;
+					return isDown;
+				}
+
+				if (key == Config.MarioPunchKey) {
+					Input.State.BButton = isDown;
+					return isDown;
+				}
+
+				if (key == Config.MarioCrouchKey) {
+					Input.State.ZButton = isDown;
+					return isDown;
+				}
 			}
 
 			if (key == Config.MarioToggleKey && isDown) {
 				Input!.State = new MarioInputState();
 				Input.UpdateInput(Mario!);
 				Input.IsControlling = !Input.IsControlling;
-				
+
 				return true;
 			}
 
 			if (key == Config.MarioTeleportKey && isDown) {
 				Vec3 playerPos = Onix.LocalPlayer!.Position;
-				
+
 				_pendingResetWorldOffset = new Vector3(playerPos.X, playerPos.Y, playerPos.Z);
 				_pendingReset = true;
-				
+
 				return true;
 			}
 		}
@@ -303,13 +319,12 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 		}
 
 		PlayerSnapshot playerSnap = new() {
-			RawHeadRotDegrees = Onix.LocalPlayer.RawHeadRot,
-			PitchDegrees = Onix.LocalPlayer.Rotation.Pitch,
-			IsValid = true
+			Yaw = Onix.LocalPlayer.RawHeadRot,
+			Pitch = Onix.LocalPlayer.Rotation.Pitch
 		};
 
 		MarioRenderSnapshot renderSnap = _renderSnapshot;
-		
+
 		InputEvents events;
 		bool isControlling;
 
@@ -321,7 +336,7 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 
 			isControlling = Input.IsControlling;
 		}
-		
+
 		if (isControlling) {
 			Commands!.DisablePlayerInput();
 
@@ -344,25 +359,23 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 		} else {
 			Commands!.ResetCamera();
 		}
-		
-		if (renderSnap.Valid) {
-			WorldSnapshot worldSnap = SM64Utils.CaptureWorldSnapshot(
-				renderSnap.MarioWorldPos,
-				renderSnap.WorldOffset
-			);
 
-			lock (_simLock) {
-				_latestWorldSnapshot = worldSnap;
-			}
+		WorldSnapshot worldSnap = SM64Utils.CaptureWorldSnapshot(
+			renderSnap.MarioWorldPos,
+			renderSnap.WorldOffset
+		);
+
+		lock (_simLock) {
+			_latestWorldSnapshot = worldSnap;
 		}
-		
+
 		_inHud = Onix.Gui.MouseGrabbed;
-		
-		if (renderSnap.Valid && renderSnap.Mesh?.TriangleData != null) {
+
+		if (renderSnap.Mesh?.TriangleData != null) {
 			gfx.SetMaterialParameters(new GameMaterialParameters { Light = true, Blending = true });
 			Renderer!.RenderMarioMesh(gfx, renderSnap.Mesh, renderSnap.WorldOffset);
 		}
-		
+
 		Commands!.Flush();
 	}
 
@@ -376,15 +389,9 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 		Onix.Events.Session.SessionLeft -= Disable;
 
 		_fixedUpdateThread?.Join(2000);
-		
+
 		Mario?.Dispose();
-		Mario = null;
-
 		Context?.Dispose();
-		Context = null;
-
 		Commands?.Dispose();
-		
-		SM64Lib.UnloadSm64Native();
 	}
 }

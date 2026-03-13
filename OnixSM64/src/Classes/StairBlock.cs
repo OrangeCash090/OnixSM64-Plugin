@@ -1,6 +1,6 @@
 using OnixRuntime.Api.Maths;
 
-namespace OnixSM64.Misc;
+namespace OnixSM64.Classes;
 
 public class StairBlock {
 	public BlockPos Position;

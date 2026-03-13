@@ -50,7 +50,11 @@ public static class SM64Lib {
 		sm64_set_mario_water_level = null!;
 		sm64_set_mario_state = null!;
 
-		FreeLibrary(_moduleHandle);
+		try {
+			FreeLibrary(_moduleHandle);
+		} catch {
+			// ignored
+		}
 
 		_moduleHandle = IntPtr.Zero;
 		_nativeLoaded = false;

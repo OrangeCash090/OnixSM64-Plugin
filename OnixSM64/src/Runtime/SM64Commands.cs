@@ -25,7 +25,7 @@ public class SM64Commands(OnixSM64Config config) : IDisposable {
 		_queue.QueueCommand("/gamerule sendcommandfeedback false");
 		_queue.QueueCommand("/inputpermission set @s movement disabled");
 	}
-	
+
 	public void HandlePunch(Vec3 lookFrom, Vec3 lookTo, Vec3 entityPos1, Vec3 entityPos2) {
 		if (config.MarioBreaksBlocks) {
 			RaycastResult raycast = Onix.Region!.Raycast(lookFrom, lookTo, BlockShapeType.Collision);
