@@ -6,7 +6,7 @@ namespace OnixSM64.Library;
 public class CommandQueue {
 	private readonly ConcurrentQueue<string> _commands = new();
 
-	public int BatchAmount { get; set; } = 1000;
+	public int BatchAmount { get; set; } = 10;
 
 	public void QueueCommand(string command) {
 		_commands.Enqueue(command);
