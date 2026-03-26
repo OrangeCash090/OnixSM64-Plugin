@@ -21,14 +21,14 @@ public static class SM64Utils {
 		return new Vec3(v.X, v.Y, v.Z);
 	}
 
-	public static WorldSnapshot CaptureWorldSnapshot(Vec3 marioWorldPos, Vector3 worldOffset) {
+	public static WorldSnapshot CaptureWorldSnapshot(Vec3 marioWorldPos, Vector3 worldOffset, bool doWater, bool doStairs) {
 		BoundingBox[] collisions = GetCollisionsAroundPoint(marioWorldPos, 3);
 		string standingBlockName = Onix.Region!.GetBlock(new BlockPos(marioWorldPos)).Name;
-		int waterLevel = ComputeWaterLevel(marioWorldPos, standingBlockName, worldOffset);
+		int waterLevel = doWater ? ComputeWaterLevel(marioWorldPos, standingBlockName, worldOffset) : -1000;
 
 		return new WorldSnapshot {
 			NearbyCollisions = collisions,
-			StairBlocks = GetStairsAroundPoint(marioWorldPos, 3),
+			StairBlocks = doStairs ? GetStairsAroundPoint(marioWorldPos, 3) : [],
 			StandingBlockName = standingBlockName,
 			WaterLevel = waterLevel
 		};

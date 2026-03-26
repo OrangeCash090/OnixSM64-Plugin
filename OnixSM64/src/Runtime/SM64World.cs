@@ -81,6 +81,10 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 	public void Disable() {
 		if (!Loaded) return;
 		Enabled = false;
+
+		// has a low success rate but it sometimes works.
+		Onix.Game.ExecuteCommand("/camera @s clear");
+		Onix.Game.ExecuteCommand("/inputpermission set @s movement enabled");
 	}
 
 	public void OnSessionJoined() {
@@ -237,11 +241,11 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 	}
 
 	private void UpdateWorldElements(WorldSnapshot snapshot) {
-		if (snapshot.StandingBlockName.Contains("lava")) {
+		if (snapshot.StandingBlockName.Contains("lava") && Config.MarioLavaReaction) {
 			Mario!.Action = MarioAction.ACT_LAVA_BOOST;
 		}
 
-		if (snapshot.StandingBlockName.Contains("fire") && Mario!.Action != MarioAction.ACT_BURNING_GROUND) {
+		if (snapshot.StandingBlockName == "fire" && Mario!.Action != MarioAction.ACT_BURNING_GROUND && Config.MarioLavaReaction) {
 			Mario!.Action = MarioAction.ACT_BURNING_GROUND;
 		}
 
@@ -377,7 +381,9 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 
 			WorldSnapshot worldSnap = SM64Utils.CaptureWorldSnapshot(
 				renderSnap.MarioWorldPos,
-				renderSnap.WorldOffset
+				renderSnap.WorldOffset,
+				Config.MarioWaterReaction,
+				Config.MarioStairBlocks
 			);
 
 			lock (_simLock) {
@@ -386,7 +392,7 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 
 			_inHud = Onix.Gui.MouseGrabbed;
 
-			if (renderSnap.Mesh != null && renderSnap.Mesh?.TriangleData != null) {
+			if (renderSnap.Mesh is { TriangleData: not null }) {
 				gfx.SetMaterialParameters(new GameMaterialParameters { Light = true, Blending = true });
 				Renderer!.RenderMarioMesh(gfx, renderSnap.Mesh, renderSnap.WorldOffset);
 			}
@@ -412,5 +418,9 @@ public sealed class SM64World(OnixSM64Config pluginConfig) : IDisposable {
 		Mario?.Dispose();
 		Context?.Dispose();
 		Commands?.Dispose();
+
+		// also has a low success rate but it sometimes works.
+		Onix.Game.ExecuteCommand("/camera @s clear");
+		Onix.Game.ExecuteCommand("/inputpermission set @s movement enabled");
 	}
 }

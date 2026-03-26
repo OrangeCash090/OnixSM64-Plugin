@@ -32,6 +32,8 @@ namespace OnixSM64 {
 			if (World is { Loaded: false }) {
 				if (Config.RomPath.Text != "" && File.Exists(Config.RomPath.Text)) {
 					World.Initialize(Config.RomPath.Text, PluginAssetsPath + "\\");
+				} else {
+					throw new Exception("No ROM file found! Please select a ROM file in the plugin settings and re-enable.");
 				}
 			}
 		}

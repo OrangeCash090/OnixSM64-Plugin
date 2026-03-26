@@ -83,10 +83,14 @@ namespace OnixSM64 {
 	    [Category("Mario World Settings")]
 	    [Value(false)]
 	    [Name("Mario Reacts To Water", "If enabled, mario swims in water.")]
-	    public partial bool MarioWater { get; set; }
+	    public partial bool MarioWaterReaction { get; set; }
 
 	    [Value(false)]
 	    [Name("Mario Reacts To Lava", "If enabled, mario burns in lava.")]
-	    public partial bool MarioLava { get; set; }
+	    public partial bool MarioLavaReaction { get; set; }
+
+	    [Value(false)]
+	    [Name("Stairs Become Slippery", "If enabled, mario slides down stair blocks.")]
+	    public partial bool MarioStairBlocks { get; set; }
     }
 }
